@@ -19,11 +19,11 @@ const setCookie = (name, json) => {
   // cookieValue += 'path=/ ;';
 
   //Specify how long you want to keep cookie
-  // period = 30; //days to store
-  // expire = new Date();
-  // expire.setTime(expire.getTime() + 1000 * 3600 * 24 * period);
-  // expire.toUTCString();
-  // cookieValue += 'expires=' + expire + ';';
+  period = 30; //days to store
+  expire = new Date();
+  expire.setTime(expire.getTime() + 1000 * 3600 * 24 * period);
+  expire.toUTCString();
+  cookieValue += 'expires=' + expire + ';';
 
   document.cookie = cookieValue;
 };
@@ -44,11 +44,27 @@ function addLi(id, stock_name, bands) {
   var ul = document.getElementById("stocksList");
   var li = document.createElement("li");
   li.innerHTML = innerhtml;
-  li.setAttribute("class", className); // added line
-  li.setAttribute("id", id); // added line
+  li.setAttribute("class", className);
+  li.setAttribute("id", id);
+  ul.appendChild(li);
+}
+function addP(date) {
+  var ul = document.getElementById("stocksList");
+  var li = document.createElement("p");
+
+  li.innerHTML = `${date}`;
+  li.setAttribute("class", "datePera");
   ul.appendChild(li);
 }
 
+// Create a new Date object
+const currentDate = new Date();
+const year = currentDate.getFullYear();
+const month = currentDate.getMonth();
+let day = currentDate.getDate();
+let todaysDate = `${year}-${month + 1}-${day}`;
+// todaysDate = `2023-8-27`;
+// day = 27
 
 
 
@@ -64,19 +80,51 @@ const bsdata = document.getElementById("formSelector");
 let current_id = 0;
 
 // Acessing old cookies data from databasepool and rendering them
+let cookiesUnpack = {};
 let cookiData_array = [];
+let keys = 0;
 
 try {
-  cookiData_array = JSON.parse(getCookie("db"));
+  // getting all cookies 
+  cookiesUnpack = JSON.parse(getCookie("db"));
+  console.log(document.cookie)
 
-  cookiData_array.forEach(function (entry) { 
-    if(entry.render){
-      addLi("00"+entry.stock_id, entry.stock_name, entry.stock_bs)
+  cookiData_array = cookiesUnpack[todaysDate];
+  if (!cookiData_array) { cookiData_array = [] }
+
+  keys = Object.keys(cookiesUnpack);
+  for (let i = (keys.length - 1); i >= 0; i--) {
+    const key = keys[i];
+    const value = cookiesUnpack[key];
+
+    const keyDate = key.slice(-2);
+    let tempDate = parseInt(keyDate)
+
+    let allowRenderDate = false;
+    value.forEach(function (element) { if (element.render) { allowRenderDate = true } });
+
+    if (allowRenderDate) {
+      if (tempDate == parseInt(day)) {
+        addP("Today");
+      }
+      else if (tempDate == (parseInt(day) - 1)) {
+        addP("yesterday");
+      }
+      else {
+        addP(key);
+      }
     }
-    current_id ++;
-  });
+
+    value.forEach(function (entry) {
+      if (entry.render) { addLi("00" + entry.stock_id, entry.stock_name, entry.stock_bs) }
+      current_id++;
+    });
+  }
 }
-catch (e) { cookiData_array = [] }
+catch (e) {
+  cookiesUnpack = {};
+  cookiData_array = [];
+}
 
 
 
@@ -86,39 +134,54 @@ function handelAddBtn() {
     stock_name: inputdata.value,
     stock_bs: bsdata.value,
     stock_id: current_id,
-    // checked: false,
     render: true,
   }
-  cookiData_array.push(data);
-  setCookie('db', cookiData_array);
-  current_id ++;
+
+  cookiData_array.push(data)
+  cookiesUnpack[todaysDate] = cookiData_array;
+  setCookie('db', cookiesUnpack);
+
+  current_id++;
   console.log("cookies are set :)");
 }
 
 
 // code runs on menu btn clicked 
 function handelMenuBtn() {
-  deleteAllCookies();
-  cookiData_array = [];
-  window.location.reload();
+  const result = confirm("Do you want to clear your Stocks list?");
+  if (result) {
+    deleteAllCookies();
+    cookiesUnpack = {};
+    window.location.reload();
+  }
 }
 
 
 // setting a condition for checkbox to be checked 
 for (let i = 0; i < current_id; i++) {
-  try{
+  try {
     let checkbox = document.getElementById('00' + i);
     checkbox.addEventListener('change', (event) => {
-     
+
       var checkedBoxes = document.querySelectorAll('input[type=checkbox]:checked');
       let selectedCbId = parseInt(checkedBoxes[0].id);
-     
-      cookiData_array[selectedCbId].render = false;
-      setCookie('db', cookiData_array);
-      window.location.reload();
+
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const value = cookiesUnpack[key];
+
+        value.forEach(function (element) {
+          if (element.stock_id == selectedCbId) {
+            element.render = false;
+            setCookie('db', cookiesUnpack);
+            window.location.reload();
+          }
+        });
+      }
+
     });
   }
-  catch(e){}
+  catch (e) { }
 }
 
 // var checkedBoxes = document.querySelectorAll('input[type=checkbox]');
