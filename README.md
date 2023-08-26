@@ -33,7 +33,7 @@ The Stock Manager Web Extension is a simple yet powerful tool designed to help y
 
 ## Screenshots
 
-![Screenshot 1](/screenshots/screenshot1.png)
+![Screenshot 1](/images/stock48.png)
 ![Screenshot 2](/screenshots/screenshot2.png)
 
 ## Contributing
