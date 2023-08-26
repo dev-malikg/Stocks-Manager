@@ -183,8 +183,3 @@ for (let i = 0; i < current_id; i++) {
   }
   catch (e) { }
 }
-
-// var checkedBoxes = document.querySelectorAll('input[type=checkbox]');
-// console.log(checkedBoxes);
-
-
